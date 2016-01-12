@@ -46,6 +46,7 @@ ManifestListItem.prototype = {
     this.element = jQuery(this.template(this.tplData)).prependTo(this.parent.manifestListElement).hide().fadeIn('slow');
 
     this.bindEvents();
+    this.listenForActions();
   },
 
   fetchTplData: function() {
@@ -119,33 +120,9 @@ ManifestListItem.prototype = {
 
   },
 
-  bindEvents: function() {
+  listenForActions: function() {
     var _this = this;
-
-    this.element.find('img').on('load', function() {
-      //if img width is not equal to the width in the html, change height
-      jQuery(this).hide().fadeIn(600);
-    });
-
-    this.element.on('click', function() {
-      var windowConfig = {
-        manifest: _this.manifest,
-        currentCanvasID: null,
-        currentFocus: 'ThumbnailsView'
-      };
-      jQuery.publish('ADD_WINDOW', windowConfig);
-    });
-
-    this.element.find('.preview-image').on('click', function(e) {
-      e.stopPropagation();
-      var windowConfig = {
-        manifest: _this.manifest,
-        currentCanvasID: jQuery(this).attr('data-image-id'),
-        currentFocus: 'ImageView'
-      };
-      jQuery.publish('ADD_WINDOW', windowConfig);
-    });
-
+    
     jQuery.subscribe('manifestPanelWidthChanged', function(event, newWidth){
       var newMaxPreviewWidth = newWidth - (_this.repoWidth + _this.margin + _this.metadataWidth + _this.margin + _this.remainingWidth);
       newMaxPreviewWidth = newMaxPreviewWidth * 0.95;
@@ -193,6 +170,34 @@ ManifestListItem.prototype = {
         }
       }
       _this.maxPreviewImagesWidth = newMaxPreviewWidth;
+    });
+  },
+
+  bindEvents: function() {
+    var _this = this;
+
+    this.element.find('img').on('load', function() {
+      //if img width is not equal to the width in the html, change height
+      jQuery(this).hide().fadeIn(600);
+    });
+
+    this.element.on('click', function() {
+      var windowConfig = {
+        manifest: _this.manifest,
+        currentCanvasID: null,
+        currentFocus: 'ThumbnailsView'
+      };
+      jQuery.publish('ADD_WINDOW', windowConfig);
+    });
+
+    this.element.find('.preview-image').on('click', function(e) {
+      e.stopPropagation();
+      var windowConfig = {
+        manifest: _this.manifest,
+        currentCanvasID: jQuery(this).attr('data-image-id'),
+        currentFocus: 'ImageView'
+      };
+      jQuery.publish('ADD_WINDOW', windowConfig);
     });
   },
 

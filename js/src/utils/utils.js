@@ -1,14 +1,15 @@
-(function($) {
+// 'use strict';
 
-  $.trimString = function(str) {
+var Utils = {
+  trimString: function(str) {
     return str.replace(/^\s+|\s+$/g, '');
-  };
+  },
 
   /* --------------------------------------------------------------------------
      Methods related to manifest data
      -------------------------------------------------------------------------- */
 
-  $.getImageIndexById = function(imagesList, id) {
+  getImageIndexById: function(imagesList, id) {
     var imgIndex = 0;
 
     jQuery.each(imagesList, function(index, img) {
@@ -18,9 +19,9 @@
     });
 
     return imgIndex;
-  };
+  },
 
-  $.getThumbnailForCanvas = function(canvas, width) {
+  getThumbnailForCanvas: function(canvas, width) {
     var version = "1.1",
     service,
     thumbnailUrl;
@@ -54,21 +55,21 @@
       thumbnailUrl = $.Iiif.makeUriWithWidth(service['@id'], width, version);
     }
     return thumbnailUrl;
-  };
+  },
 
-  $.getImagesListByManifest = function(manifest) {
+  getImagesListByManifest: function(manifest) {
     return manifest.sequences[0].canvases;
-  };
+  },
 
-  $.getCollectionTitle = function(metadata) {
+  getCollectionTitle: function(metadata) {
     return metadata.details.label || '';
-  };
+  },
 
   /* 
      miscellaneous utilities
      */
 
-  $.getQueryParams = function(url) {
+  getQueryParams: function(url) {
     var assoc  = {};
     var decode = function (s) { return decodeURIComponent(s.replace(/\+/g, " ")); };
     var queryString = url.split('?')[1];
@@ -82,22 +83,22 @@
     }
 
     return assoc;
-  };
+  },
 
-  $.genUUID = function() {
+  genUUID: function() {
     var idNum = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
       var r = Math.random() * 16|0, v = c == 'x' ? r : (r&0x3|0x8);
       return v.toString(16);
     });
 
     return idNum;
-  };
+  },
 
-  jQuery.fn.slideFadeToggle  = function(speed, easing, callback) {
-    return this.animate({opacity: 'toggle', height: 'toggle'}, speed, easing, callback);
-  };
+  slideFadeToggle: function(speed, easing, callback) {
+    return jQuery.animate({opacity: 'toggle', height: 'toggle'}, speed, easing, callback);
+  },
 
-  $.throttle = function(func, wait, options) {
+  throttle: function(func, wait, options) {
     var context, args, result;
     var timeout = null;
     var previous = 0;
@@ -127,9 +128,9 @@
       }
       return result;
     };
-  };
+  },
 
-  $.debounce = function(func, wait, immediate) {
+  debounce: function(func, wait, immediate) {
     var timeout, args, context, timestamp, result;
     return function() {
       context = this;
@@ -151,16 +152,16 @@
       if (callNow) result = func.apply(context, args);
       return result;
     };
-  };
+  },
 
-  $.parseRegion  = function(url) {
+  parseRegion: function(url) {
     url = new URI(url);
     var regionString = url.hash();
     regionArray = regionString.split('=')[1].split(',');
     return regionArray;
-  };
+  },
 
-  $.getOsdFrame = function(region, currentImg) {
+  getOsdFrame: function(region, currentImg) {
     var imgWidth = currentImg.width,
     imgHeight = currentImg.height,
     canvasWidth = currentImg.canvasWidth,
@@ -175,10 +176,10 @@
     var osdFrame = new OpenSeadragon.Rect(rectX,rectY,rectW,rectH);
 
     return osdFrame;
-  };
+  },
 
   // http://upshots.org/javascript/jquery-test-if-element-is-in-viewport-visible-on-screen
-  $.isOnScreen = function(elem, outsideViewportFactor) {
+  isOnScreen: function(elem, outsideViewportFactor) {
     var factor = 1;
     if (outsideViewportFactor) {
       factor = outsideViewportFactor;
@@ -197,16 +198,16 @@
     bounds.right = bounds.left + el.width();
 
     return (!(viewport.right < bounds.left || viewport.left > bounds.right || viewport.bottom < bounds.top || viewport.top > bounds.bottom));
-  };
+  },
 
-  $.getRangeIDByCanvasID = function(structures, canvasID /*, [given parent range] (for multiple ranges, later) */) {
+  getRangeIDByCanvasID: function(structures, canvasID /*, [given parent range] (for multiple ranges, later) */) {
     var ranges = jQuery.grep(structures, function(range) { return jQuery.inArray(canvasID, range.canvases) > -1; }),
     rangeIDs = jQuery.map(ranges,  function(range) { return range['@id']; });
 
     return rangeIDs;
-  };
+  },
 
-  $.layoutDescriptionFromGridString = function (gridString) {
+  layoutDescriptionFromGridString: function (gridString) {
     var columns = parseInt(gridString.substring(gridString.indexOf("x") + 1, gridString.length),10),
     rowsPerColumn = parseInt(gridString.substring(0, gridString.indexOf("x")),10),
     layoutDescription = {
@@ -236,9 +237,9 @@
     }
 
     return layoutDescription;
-  };
+  },
 
-  $.generateRange = function(start, stop, step) {
+  generateRange: function(start, stop, step) {
     if (arguments.length <= 1) {
       stop = start || 0;
       start = 0;
@@ -253,10 +254,10 @@
     }
 
     return range;
-  };
+  },
 
   // Configurable Promises
-  $.createImagePromise = function(imageUrl) {
+  createImagePromise: function(imageUrl) {
     var img = new Image(),
     dfd = jQuery.Deferred();
 
@@ -274,6 +275,7 @@
 
     img.src = imageUrl;
     return dfd.promise();
-  };
+  }
+};
 
-}(Mirador));
+module.exports = Utils;

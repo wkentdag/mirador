@@ -80,6 +80,13 @@
 
     },
 
+    get: function(prop, parent) {
+      if (parent) {
+        return this[parent][prop];
+      }
+      return this[prop];
+    },
+
     set: function(prop, value, options) {
       // when a property of the config is updated,
       // save it to localStore.

@@ -1,114 +1,121 @@
-(function($) {
+// 'use strict';
+var Utils = require('../utils/Utils');
 
-  $.WorkspacePanel = function(options) {
+var WorkspacePanel = function(options) {
 
-    jQuery.extend(true, this, {
-      element: null,
-      appendTo: null,
-      parent: null,
-      workspace: null,
-      maxRows: null,
-      maxColumns: null
-    }, options);
+  jQuery.extend(true, this, {
+    element: null,
+    appendTo: null,
+    parent: null,
+    workspace: null,
+    maxRows: null,
+    maxColumns: null
+  }, options);
 
-    this.init();
+  this.init();
 
-  };
+};
 
-  $.WorkspacePanel.prototype = {
-    init: function () {
-      var _this = this,
-      templateData = {
-        rows: $.layoutDescriptionFromGridString(_this.maxColumns + 'x' + _this.maxRows).children.map(function(column, rowIndex) {
-          column.columns = column.children.map(function(row, columnIndex) {
-            row.gridString = (rowIndex+1) + 'x' + (columnIndex+1);
-            return row;
-          });
-          return column;
-        })
-      };
+WorkspacePanel.prototype = {
+  init: function () {
+    var _this = this,
+    templateData = {
+      rows: Utils.layoutDescriptionFromGridString(_this.maxColumns + 'x' + _this.maxRows).children.map(function(column, rowIndex) {
+        column.columns = column.children.map(function(row, columnIndex) {
+          row.gridString = (rowIndex+1) + 'x' + (columnIndex+1);
+          return row;
+        });
+        return column;
+      })
+    };
 
-      this.element = jQuery(this.template(templateData)).appendTo(this.appendTo);
-      var backgroundImage = _this.parent.buildPath + _this.parent.imagesPath + 'debut_dark.png';
-      this.element.css('background-image','url('+backgroundImage+')').css('background-repeat','repeat');
-      this.bindEvents();
-    },
+    this.element = jQuery(this.template(templateData)).appendTo(this.appendTo);
+    var backgroundImage = _this.parent.buildPath + _this.parent.imagesPath + 'debut_dark.png';
+    this.element.css('background-image','url('+backgroundImage+')').css('background-repeat','repeat');
+    
+    this.bindEvents();
+    this.listenForActions();
+  },
 
-    bindEvents: function() {
-      var _this = this;
-      jQuery.subscribe('workspacePanelVisible.set', function(_, stateValue) {
-        if (stateValue) { _this.show(); return; }
-        _this.hide();
-      });
+  listenForActions: function() {
+    var _this = this;
 
-      _this.element.find('.grid-item').on('click', function() {
-        var gridString = jQuery(this).data('gridstring');
-        _this.onSelect(gridString);
-      });
+    jQuery.subscribe('workspacePanelVisible.set', function(_, stateValue) {
+      if (stateValue) { _this.show(); return; }
+      _this.hide();
+    });
+  },
 
-      _this.element.find('.grid-item').on('mouseover', function() {
-        var gridString = jQuery(this).data('gridstring');
-        _this.onHover(gridString);
-      });
-      
-      _this.element.find('.select-grid').on('mouseout', function() {
-        _this.element.find('.grid-item').removeClass('hovered');
-        _this.element.find('.grid-instructions').show();
-        _this.element.find('.grid-text').hide();
-      });
-    },
+  bindEvents: function() {
+    var _this = this;
+    
+    _this.element.find('.grid-item').on('click', function() {
+      var gridString = jQuery(this).data('gridstring');
+      _this.onSelect(gridString);
+    });
 
-    onSelect: function(gridString) {
-      var _this = this;
-      var layoutDescription = $.layoutDescriptionFromGridString(gridString);
-      _this.workspace.resetLayout(layoutDescription);
-      _this.parent.toggleWorkspacePanel();
-    },
+    _this.element.find('.grid-item').on('mouseover', function() {
+      var gridString = jQuery(this).data('gridstring');
+      _this.onHover(gridString);
+    });
+    
+    _this.element.find('.select-grid').on('mouseout', function() {
+      _this.element.find('.grid-item').removeClass('hovered');
+      _this.element.find('.grid-instructions').show();
+      _this.element.find('.grid-text').hide();
+    });
+  },
 
-    onHover: function(gridString) {
-      var _this = this,
-      highestRow = gridString.charAt(0),
-      highestColumn = gridString.charAt(2),
-      gridItems = _this.element.find('.grid-item');
-      gridItems.removeClass('hovered');
-      gridItems.filter(function(index) {
-        var element = jQuery(this);
-        var change = element.data('gridstring').charAt(0) <= highestRow && element.data('gridstring').charAt(2)<=highestColumn;
-        return change;
-      }).addClass('hovered');
-      _this.element.find('.grid-instructions').hide();
-      _this.element.find('.grid-text').text(gridString).show();
-    },
+  onSelect: function(gridString) {
+    var _this = this;
+    var layoutDescription = Utils.layoutDescriptionFromGridString(gridString);
+    _this.workspace.resetLayout(layoutDescription);
+    _this.parent.toggleWorkspacePanel();
+  },
 
-    hide: function() {
-      jQuery(this.element).hide({effect: "fade", duration: 160, easing: "easeOutCubic"});
-    },
+  onHover: function(gridString) {
+    var _this = this,
+    highestRow = gridString.charAt(0),
+    highestColumn = gridString.charAt(2),
+    gridItems = _this.element.find('.grid-item');
+    gridItems.removeClass('hovered');
+    gridItems.filter(function(index) {
+      var element = jQuery(this);
+      var change = element.data('gridstring').charAt(0) <= highestRow && element.data('gridstring').charAt(2)<=highestColumn;
+      return change;
+    }).addClass('hovered');
+    _this.element.find('.grid-instructions').hide();
+    _this.element.find('.grid-text').text(gridString).show();
+  },
 
-    show: function() {
-      jQuery(this.element).show({effect: "fade", duration: 160, easing: "easeInCubic"});
-    },
+  hide: function() {
+    jQuery(this.element).hide({effect: "fade", duration: 160, easing: "easeOutCubic"});
+  },
 
-    template: Handlebars.compile([
-                                 '<div id="workspace-select-menu">',
-                                 '<h1>{{t "changeLayout"}}</h1>',
-                                 '<h3 class="grid-text"></h3>',
-                                 '<h3 class="grid-instructions">{{t "selectGrid"}}</h3>',
-                                 '<div class="select-grid">',
-                                 '{{#each rows}}',
-                                 '<div class="grid-row">',
-                                   '{{#each columns}}',
-                                   '<a class="grid-item" data-gridString="{{gridString}}">',
-                                   '<div class="grid-icon"></div>',
-                                   '</a>',
-                                   '{{/each}}',
-                                 '</div>',
+  show: function() {
+    jQuery(this.element).show({effect: "fade", duration: 160, easing: "easeInCubic"});
+  },
+
+  template: Handlebars.compile([
+                               '<div id="workspace-select-menu">',
+                               '<h1>{{t "changeLayout"}}</h1>',
+                               '<h3 class="grid-text"></h3>',
+                               '<h3 class="grid-instructions">{{t "selectGrid"}}</h3>',
+                               '<div class="select-grid">',
+                               '{{#each rows}}',
+                               '<div class="grid-row">',
+                                 '{{#each columns}}',
+                                 '<a class="grid-item" data-gridString="{{gridString}}">',
+                                 '<div class="grid-icon"></div>',
+                                 '</a>',
                                  '{{/each}}',
-                                 '</div>',
-                                 // '<div class="preview-container">',
-                                 // '</div>',
-                                 '</div>'
-    ].join(''))
-  };
+                               '</div>',
+                               '{{/each}}',
+                               '</div>',
+                               // '<div class="preview-container">',
+                               // '</div>',
+                               '</div>'
+  ].join(''))
+};
 
-}(Mirador));
 
