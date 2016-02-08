@@ -18,6 +18,7 @@
       focusesOriginal:   ['ThumbnailsView', 'ImageView', 'ScrollView', 'BookView'],
       focuses:           ['ThumbnailsView', 'ImageView', 'ScrollView', 'BookView'],
       focusModules:           {'ThumbnailsView': null, 'ImageView': null, 'ScrollView': null, 'BookView': null},
+      ManifestLayouts:   null,
       focusOverlaysAvailable: {
         'ThumbnailsView': {
           'overlay' : {'MetadataView' : false},
@@ -39,7 +40,7 @@
       focusOptions: null,
       id : null,
       sidePanel: null, //the actual module for the side panel
-      sidePanelAvailable: true,
+      sidePanelAvailable: false,
       sidePanelOptions: {
         "toc" : true,
         "annotations" : false
@@ -163,22 +164,23 @@
 
       //attach view and toggle view, which triggers the attachment of panels or overlays
       _this.bindNavigation();
-      switch(focusState) {
-        case 'ThumbnailsView':
-          _this.toggleThumbnails(_this.currentCanvasID);
-        break;
-        case 'ImageView':
-          _this.toggleImageView(_this.currentCanvasID);
-        break;
-        case 'BookView':
-          _this.toggleBookView(_this.currentCanvasID);
-        break;
-        case 'ScrollView':
-          _this.toggleScrollView(_this.currentCanvasID);
-        break;
-        default:
-          break;
-      }
+      _this.toggleManifestLayouts(_this.currentCanvasID);
+      // switch(focusState) {
+      //   case 'ThumbnailsView':
+      //     _this.toggleThumbnails(_this.currentCanvasID);
+      //   break;
+      //   case 'ImageView':
+      //     _this.toggleImageView(_this.currentCanvasID);
+      //   break;
+      //   case 'BookView':
+      //     _this.toggleBookView(_this.currentCanvasID);
+      //   break;
+      //   case 'ScrollView':
+      //     _this.toggleScrollView(_this.currentCanvasID);
+      //   break;
+      //   default:
+      //     break;
+      // }
 
       if (_this.state.getSlots().length <= 1) {
         _this.element.find('.remove-object-option').hide();
@@ -558,6 +560,38 @@
       });
       //and then do toggling for current focus
       this.togglePanels('overlay', !currentState, 'MetadataView', focusState);
+    },
+
+    toggleManifestLayouts: function(canvasID) {
+      this.currentCanvasID = canvasID;
+      if (this.ManifestLayouts === null) {
+        this.ManifestLayouts = new manifestor({
+          manifest: this.manifest.jsonLd,
+          selectedCanvas: canvasID,
+          container: this.element.find('.view-container'),
+          perspective:  'overview', //this will be either ThumbnailsView (overview), ImageView/BookView/ScrollView (detail)
+          viewingMode: 'individuals', //if detail, then ImageView (individuals), BookView (paged), ScrollView (continuous)
+          canvasClass: 'canvas', //default set to 'canvas'
+          frameClass: 'frame', //default set to 'frame'
+          labelClass: 'label', //default set to 'label'
+          viewportPadding: {  // in detail view, make sure this area is clear
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 10 // units in % of pixel height of viewport
+          },
+          stateUpdateCallback: function() {
+            console.log('I have updated!');
+          }
+        });
+        console.log(this.ManifestLayouts.getState());
+      } else {
+        var view = this.ManifestLayouts;
+        //do some sort of update
+        //view.updateImage(canvasID);
+      }
+      //this.toggleFocus('ImageView', 'ImageView');
+      //add in functionality from toggleFocus
     },
 
     toggleFocus: function(focusState, imageMode) {
