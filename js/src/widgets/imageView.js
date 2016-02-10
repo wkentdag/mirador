@@ -137,14 +137,6 @@
     bindEvents: function() {
       var _this = this;
 
-      this.element.find('.mirador-osd-next').on('click', function() {
-        _this.next();
-      });
-
-      this.element.find('.mirador-osd-previous').on('click', function() {
-        _this.previous();
-      });
-
       this.element.find('.mirador-osd-annotations-layer').on('click', function() {
         if (_this.hud.annoState.current === 'none') {
           _this.hud.annoState.startup(this);
@@ -411,22 +403,6 @@
         jQuery.publish('UPDATE_FOCUS_IMAGES.' + this.windowId, {array: [canvasID]});
       } else {
         jQuery.publish('UPDATE_FOCUS_IMAGES.' + this.windowId, {array: [canvasID]});
-      }
-    },
-
-    next: function() {
-      var next = this.currentImgIndex + 1;
-
-      if (next < this.imagesList.length) {
-        jQuery.publish('SET_CURRENT_CANVAS_ID.' + this.windowId, this.imagesList[next]['@id']);
-      }
-    },
-
-    previous: function() {
-      var prev = this.currentImgIndex - 1;
-
-      if (prev >= 0) {
-        jQuery.publish('SET_CURRENT_CANVAS_ID.' + this.windowId, this.imagesList[prev]['@id']);
       }
     }
   };

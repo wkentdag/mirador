@@ -37,6 +37,18 @@
       }
 
       this.bindEvents();
+      this.listenForActions();
+    },
+
+    listenForActions: function() {
+      var _this = this;
+      jQuery.subscribe('HIDE_HUD.'+_this.windowId, function(event) {
+        _this.appendTo.find('.hud-control').hide();
+      });
+
+      jQuery.subscribe('SHOW_HUD.'+_this.windowId, function(event) {
+        _this.appendTo.find('.hud-control').show();
+      });
     },
 
     bindEvents: function() {
@@ -142,7 +154,7 @@
 
     template: Handlebars.compile([
                                  '{{#if showNextPrev}}',
-                                 '<a class="mirador-osd-previous hud-control ">',
+                                 '<a class="mirador-osd-previous hud-control">',
                                  '<i class="fa fa-3x fa-chevron-left "></i>',
                                  '</a>',
                                  '{{/if}}',
@@ -152,21 +164,21 @@
                                  '</a>',
                                  '{{/if}}',
                                  '{{#if showAnno}}',
-                                 '<a class="mirador-osd-annotations-layer hud-control " role="button" aria-label="Toggle annotations">',
+                                 '<a class="mirador-osd-annotations-layer hud-control" role="button" aria-label="Toggle annotations">',
                                  '<i class="fa fa-lg fa-comments"></i>',
                                  '</a>',
                                  '{{/if}}',
                                  '{{#if showNextPrev}}',
-                                 '<a class="mirador-osd-next hud-control ">',
+                                 '<a class="mirador-osd-next hud-control">',
                                  '<i class="fa fa-3x fa-chevron-right"></i>',
                                  '</a>',
                                  '{{/if}}',
                                  '{{#if showBottomPanel}}',
-                                 '<a class="mirador-osd-toggle-bottom-panel hud-control " role="button" aria-label="Toggle Bottom Panel">',
+                                 '<a class="mirador-osd-toggle-bottom-panel hud-control" role="button" aria-label="Toggle Bottom Panel">',
                                  '<i class="fa fa-2x fa-ellipsis-h"></i>',
                                  '</a>',
                                  '{{/if}}',
-                                 '<div class="mirador-pan-zoom-controls hud-control ">',
+                                 '<div class="mirador-pan-zoom-controls hud-control">',
                                  '<a class="mirador-osd-up hud-control" role="button" aria-label="Move image up">',
                                  '<i class="fa fa-chevron-circle-up"></i>',
                                  '</a>',

@@ -164,7 +164,7 @@
 
       //attach view and toggle view, which triggers the attachment of panels or overlays
       _this.bindNavigation();
-      _this.toggleManifestLayouts(_this.currentCanvasID);
+      _this.toggleManifestLayouts(_this.currentCanvasID, _this.currentFocus);
       // switch(focusState) {
       //   case 'ThumbnailsView':
       //     _this.toggleThumbnails(_this.currentCanvasID);
@@ -316,6 +316,14 @@
           _this.focusModules.ScrollView.reloadImages(Math.floor(containerHeight * _this.scrollImageRatio), triggerShow);
         }
       }, 300));
+
+      this.element.find('.mirador-osd-next').on('click', function() {
+        _this.next();
+      });
+
+      this.element.find('.mirador-osd-previous').on('click', function() {
+        _this.previous();
+      });
 
     },
 
@@ -562,15 +570,44 @@
       this.togglePanels('overlay', !currentState, 'MetadataView', focusState);
     },
 
-    toggleManifestLayouts: function(canvasID) {
+    toggleManifestLayouts: function(canvasID, currentFocus) {
+      var _this = this;
+      
+      var manifestLayoutsUpdated = function() {
+        var layoutState = _this.ManifestLayouts.getState(),
+        perspective = layoutState.perspective,
+        viewingMode = layoutState.viewingMode;
+        if (perspective === 'overview' || (perspective === 'detail' && viewingMode === 'continuous')) {
+          console.log('hiding hud');
+          jQuery.publish('HIDE_HUD.'+_this.id);
+        } else {
+          console.log('showing hud');
+          jQuery.publish('SHOW_HUD.'+_this.id);
+        }
+        //this.toggleFocus('ImageView', 'ImageView');
+        //add in functionality from toggleFocus
+      };
+
       this.currentCanvasID = canvasID;
+      var perspective = 'detail';
+      if (currentFocus === 'ThumbnailsView') {
+        perspective = 'overview';
+      }
+      var viewingMode = 'individuals';
+      if (perspective === 'detail') {
+        if (currentFocus === 'BookView') {
+          viewingMode = 'paged';
+        } else if (currentFocus === 'ScrollView') {
+          viewingMode = 'continuous';
+        } 
+      }
       if (this.ManifestLayouts === null) {
         this.ManifestLayouts = new manifestor({
           manifest: this.manifest.jsonLd,
           selectedCanvas: canvasID,
           container: this.element.find('.view-container'),
-          perspective:  'overview', //this will be either ThumbnailsView (overview), ImageView/BookView/ScrollView (detail)
-          viewingMode: 'individuals', //if detail, then ImageView (individuals), BookView (paged), ScrollView (continuous)
+          perspective:  perspective, //this will be either ThumbnailsView (overview), ImageView/BookView/ScrollView (detail)
+          viewingMode: viewingMode, //if detail, then ImageView (individuals), BookView (paged), ScrollView (continuous)
           canvasClass: 'canvas', //default set to 'canvas'
           frameClass: 'frame', //default set to 'frame'
           labelClass: 'label', //default set to 'label'
@@ -580,18 +617,25 @@
             right: 0,
             bottom: 10 // units in % of pixel height of viewport
           },
-          stateUpdateCallback: function() {
-            console.log('I have updated!');
-          }
+          stateUpdateCallback: manifestLayoutsUpdated
         });
+        this.hud = new $.Hud({
+          appendTo: this.element.find('.view-container'),
+          bottomPanelAvailable: this.bottomPanelAvailable,
+          windowId: this.id,
+          annotationLayerAvailable: this.annotationLayerAvailable,
+          annotationCreationAvailable: this.annotationCreationAvailable,
+          annoEndpointAvailable: this.annoEndpointAvailable,
+          fullScreenAvailable : this.fullScreenAvailable,
+          showNextPrev : this.imagesList.length !== 1
+        });
+        manifestLayoutsUpdated();
         console.log(this.ManifestLayouts.getState());
       } else {
         var view = this.ManifestLayouts;
-        //do some sort of update
-        //view.updateImage(canvasID);
+        view.selectPerspective(perspective);
+        view.selectViewingMode(viewingMode);
       }
-      //this.toggleFocus('ImageView', 'ImageView');
-      //add in functionality from toggleFocus
     },
 
     toggleFocus: function(focusState, imageMode) {
@@ -704,6 +748,18 @@
         view.updateImage(canvasID);
       }
       this.toggleFocus('ScrollView', '');
+    },
+
+    next: function() {
+      this.ManifestLayouts.next();
+      var layoutState = this.ManifestLayouts.getState();
+      //jQuery.publish('SET_CURRENT_CANVAS_ID.' + this.id, layoutState.selectedCanvas);
+    },
+
+    previous: function() {
+      this.ManifestLayouts.previous();
+      var layoutState = this.ManifestLayouts.getState();
+      //jQuery.publish('SET_CURRENT_CANVAS_ID.' + this.id, layoutState.selectedCanvas);
     },
 
     updateFocusImages: function(imageList) {
@@ -848,19 +904,19 @@
       });
 
       this.element.find('.single-image-option').on('click', function() {
-        _this.toggleImageView(_this.currentCanvasID);
+        _this.toggleManifestLayouts(_this.currentCanvasID, 'ImageView');
       });
 
       this.element.find('.book-option').on('click', function() {
-        _this.toggleBookView(_this.currentCanvasID);
+        _this.toggleManifestLayouts(_this.currentCanvasID, 'BookView');
       });
 
       this.element.find('.scroll-option').on('click', function() {
-        _this.toggleScrollView(_this.currentCanvasID);
+        _this.toggleManifestLayouts(_this.currentCanvasID, 'ScrollView');
       });
 
       this.element.find('.thumbnails-option').on('click', function() {
-        _this.toggleThumbnails(_this.currentCanvasID);
+        _this.toggleManifestLayouts(_this.currentCanvasID, 'ThumbnailsView');
       });
 
       this.element.find('.mirador-icon-metadata-view').on('click', function() {

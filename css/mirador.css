@@ -1865,3 +1865,41 @@ div.manifest-info a.mirador-btn.mirador-icon-toc {
 .mce-edit-area iframe {
     height: 75px !important;
 }
+
+.frame {
+    position: absolute;
+    display: block;
+    box-sizing: border-box;
+}
+
+.frame .label {
+  bottom: 0;
+  font-size: 12px;
+  position: absolute;
+  text-align: center;
+  width: 100%;
+  margin-bottom: 0;
+  height: 35px;
+  color: #999;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.canvas {
+    color:white;
+    position: absolute;
+    top:0;
+    left:0;
+    cursor: pointer;
+    box-sizing: border-box;
+    // border: 1px solid deepskyblue;
+    box-shadow: 0 0 0 1px deepskyblue;
+    // &:hover {
+    //     border: 1px solid white;
+    //     box-shadow: 0 0 12px white;
+    // }
+    // &.selected {
+    //     border: 2px solid deepskyblue;
+    //     box-shadow: 0 0 12px deepskyblue;
+    // }
+}
