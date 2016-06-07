@@ -1,7 +1,15 @@
 (function($){
 
-  $.Manifest = function(manifestUri, location) {
-    if (manifestUri.indexOf('info.json') !== -1) {
+  $.Manifest = function(manifestUri, location, manifestContent) {
+    if (manifestContent) {
+      jQuery.extend(true, this, {
+          jsonLd: null,
+          location: location,
+          uri: manifestUri,
+          request: null
+      });
+      this.initFromManifestContent(manifestContent);
+    } else if (manifestUri.indexOf('info.json') !== -1) {
       // The following is an ugly hack. We need to finish the
       // Manifesto utility library.
       // See: https://github.com/IIIF/manifesto
@@ -59,10 +67,17 @@
         dataType: 'json',
         async: true
       });
-
       this.request.done(function(jsonLd) {
         _this.jsonLd = _this.generateInfoWrapper(jsonLd);
       });
+    },
+    initFromManifestContent: function (manifestContent) {
+      var _this = this;
+      this.request = jQuery.Deferred();
+      this.request.done(function(jsonLd) {
+        _this.jsonLd = jsonLd;
+      });
+      _this.request.resolve(manifestContent); // resolve immediately
     },
     getThumbnailForCanvas : function(canvas, width) {
       var version = "1.1",
@@ -97,6 +112,15 @@
         thumbnailUrl = $.Iiif.makeUriWithWidth(service['@id'], width, version);
       }
       return thumbnailUrl;
+    },
+    getVersion: function() {
+      var versionMap = {
+        'http://www.shared-canvas.org/ns/context.json': '1', // is this valid?
+        'http://iiif.io/api/presentation/1/context.json': '1',
+        'http://iiif.io/api/presentation/2/context.json': '2',
+        'http://iiif.io/api/presentation/2.1/context.json': '2.1'
+      };
+      return versionMap[this.jsonLd['@context']];
     },
     getCanvases : function() {
       var _this = this;
@@ -148,8 +172,8 @@
                       '@id': infoJson,
                       '@type': "dctypes:Image",
                       format: "image/jpeg",
-                      height: infoJson.width,
-                      width: infoJson.height,
+                      height: infoJson.height,
+                      width: infoJson.width,
                       service: {
                         '@id': infoJson['@id'],
                         '@context': infoJson['@context'],

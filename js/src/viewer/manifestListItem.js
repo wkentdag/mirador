@@ -18,7 +18,9 @@
       imagesTotalWidth:           0,
       tplData:                    null,
       allImages:                  [],
-      remaining:                  0
+      remaining:                  0,
+      state:                      null,
+      eventEmitter:               null
     }, options);
 
     this.init();
@@ -43,7 +45,28 @@
       });
 
       this.fetchTplData(this.manifestId);
-      this.element = jQuery(this.template(this.tplData)).prependTo(this.appendTo).hide().fadeIn('slow');
+      
+      if (_this.state.getStateProperty('preserveManifestOrder')) {
+        if (this.appendTo.children().length === 0) {
+          this.element = jQuery(this.template(this.tplData)).prependTo(this.appendTo).hide().fadeIn('slow');          
+        } else {
+          var liList = _this.appendTo.find('li');
+          jQuery.each(liList, function(index, item) {
+              var prev = parseFloat(jQuery(item).attr('data-index-number'));
+              var next = parseFloat(jQuery(liList[index+1]).attr('data-index-number'));
+              var current = _this.tplData.index;
+              if (current <= prev && (next > current || isNaN(next)) ) {
+                _this.element = jQuery(_this.template(_this.tplData)).insertBefore(jQuery(item)).hide().fadeIn('slow');
+                return false;
+              } else if (current > prev && (current < next || isNaN(next))) {                
+                _this.element = jQuery(_this.template(_this.tplData)).insertAfter(jQuery(item)).hide().fadeIn('slow');
+                return false;
+              }
+          });
+        }
+      } else {
+        this.element = jQuery(this.template(this.tplData)).prependTo(this.appendTo).hide().fadeIn('slow');
+      }
 
       this.bindEvents();
       this.listenForActions();
@@ -54,11 +77,12 @@
       location = _this.manifest.location,
       manifest = _this.manifest.jsonLd;
 
-      this.tplData = { 
-        label: manifest.label,
+      this.tplData = {
+        label: $.JsonLd.getTextValue(manifest.label),
         repository: location,
         canvasCount: manifest.sequences[0].canvases.length,
-        images: []
+        images: [],
+        index: _this.state.getManifestIndex(manifest['@id'])
       };
 
       this.tplData.repoImage = (function() {
@@ -71,7 +95,7 @@
         }
         if (_this.tplData.repository === '(Added from URL)') {
           repo = '';
-        }            
+        }
         var imageName = _this.state.getStateProperty('repoImages')[repo || 'other'] || _this.state.getStateProperty('repoImages').other;
 
         return _this.state.getStateProperty('buildPath') + _this.state.getStateProperty('logosPath') + imageName;
@@ -98,9 +122,13 @@
 
       jQuery.each(_this.allImages, function(index, value) {
         var width = value.width;
-        
+
         _this.imagesTotalWidth += (width + _this.margin);
         if (_this.imagesTotalWidth >= _this.maxPreviewImagesWidth) {
+          // outsized image will inherited
+          if (value.width > _this.maxPreviewImagesWidth) {
+            _this.tplData.images.push(value);
+          }
           _this.imagesTotalWidth -= (width + _this.margin);
           return false;
         }
@@ -123,7 +151,7 @@
     listenForActions: function() {
       var _this = this;
 
-      jQuery.subscribe('manifestPanelWidthChanged', function(event, newWidth){
+      _this.eventEmitter.subscribe('manifestPanelWidthChanged', function(event, newWidth){
         _this.updateDisplay(newWidth);
       });
     },
@@ -139,20 +167,20 @@
       this.element.on('click', function() {
         var windowConfig = {
           manifest: _this.manifest,
-          currentCanvasID: null,
-          currentFocus: 'ThumbnailsView'
+          canvasID: null,
+          viewType: 'ThumbnailsView'
         };
-        jQuery.publish('ADD_WINDOW', windowConfig);
+        _this.eventEmitter.publish('ADD_WINDOW', windowConfig);
       });
 
       this.element.find('.preview-image').on('click', function(e) {
         e.stopPropagation();
         var windowConfig = {
           manifest: _this.manifest,
-          currentCanvasID: jQuery(this).attr('data-image-id'),
-          currentFocus: 'ImageView'
+          canvasID: jQuery(this).attr('data-image-id'),
+          viewType: _this.state.getStateProperty('windowSettings').viewType //get the view type from settings rather than always defaulting to ImageView
         };
-        jQuery.publish('ADD_WINDOW', windowConfig);
+        _this.eventEmitter.publish('ADD_WINDOW', windowConfig);
       });
     },
 
@@ -160,7 +188,8 @@
         var _this = this,
         newMaxPreviewWidth = newWidth - (_this.repoWidth + _this.margin + _this.metadataWidth + _this.margin + _this.remainingWidth);
         newMaxPreviewWidth = newMaxPreviewWidth * 0.95;
-        
+        var image = null;
+
         //width of browser window has been made smaller
         if (newMaxPreviewWidth < _this.maxPreviewImagesWidth ) {
           while (_this.imagesTotalWidth >= newMaxPreviewWidth) {
@@ -179,13 +208,15 @@
         } else if (newMaxPreviewWidth > _this.maxPreviewImagesWidth) {
           //width of browser window has been made larger
           var currentLastImage = _this.tplData.images[_this.tplData.images.length-1],
-          index = currentLastImage ? currentLastImage.index+1 : 0,
+            index = currentLastImage ? currentLastImage.index+1 : 0;
+
           image = _this.allImages[index];
+
           if (image) {
             while (_this.imagesTotalWidth + image.width + _this.margin < newMaxPreviewWidth) {
               _this.tplData.images.push(image);
               _this.imagesTotalWidth += (image.width + _this.margin);
-              
+
               //add image to dom
               _this.element.find('.preview-images').append('<img src="'+image.url+'" width="'+image.width+'" height="'+image.height+'" class="preview-image flash" data-image-id="'+image.id+'">');
 
@@ -215,7 +246,7 @@
     },
 
     template: Handlebars.compile([
-      '<li>',
+      '<li data-index-number={{index}}>',
       '<div class="repo-image">',
         '<img src="{{repoImage}}" alt="repoImg">',
       '</div>',
@@ -232,17 +263,18 @@
           '</div>',
         '</div>',
       '</div>',
-      '<div class="preview-images">',
-      '{{#each images}}',
-        '<img src="{{url}}" width="{{width}}" height="{{height}}" class="preview-image flash" data-image-id="{{id}}">',
-      '{{/each}}',
+      '<div class="preview-thumb">',
+        '<div class="preview-images">',
+        '{{#each images}}',
+          '<img src="{{url}}" width="{{width}}" height="{{height}}" class="preview-image flash" data-image-id="{{id}}">',
+        '{{/each}}',
+        '</div>',
+        '{{#if remaining}}',
+          '<i class="fa fa fa-ellipsis-h remaining"></i>',
+        '{{/if}}',
       '</div>',
-      '{{#if remaining}}',
-        '<i class="fa fa fa-ellipsis-h remaining"></i>',
-      '{{/if}}',
       '</li>'
     ].join(''))
   };
 
 }(Mirador));
-

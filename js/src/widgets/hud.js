@@ -8,7 +8,7 @@
       annoState: null,
       showAnnotations: true,
       annoEndpointAvailable: false,
-      fullScreenAvailable: true
+      eventEmitter: null
     }, options);
 
     this.init();
@@ -22,8 +22,7 @@
       this.element = jQuery(this.template({
         showNextPrev : this.showNextPrev, 
         showBottomPanel : typeof this.bottomPanelAvailable === 'undefined' ? true : this.bottomPanelAvailable,
-        showAnno : this.annotationLayerAvailable,
-        showFullScreen : this.fullScreenAvailable
+        showAnno : this.annotationLayerAvailable
       })).appendTo(this.appendTo);
 
       if (this.annotationLayerAvailable && this.annoEndpointAvailable) {
@@ -32,7 +31,10 @@
           container: this.appendTo,
           mode: 'displayAnnotations',
           windowId: this.windowId,
-          annotationCreationAvailable: this.annotationCreationAvailable
+          annotationCreationAvailable: this.annotationCreationAvailable,
+          annotationRefresh: this.annotationRefresh,
+          availableTools: this.availableTools,
+          eventEmitter: this.eventEmitter
         });
       }
 
@@ -72,40 +74,40 @@
         ],
         callbacks: {
           onstartup: function(event, from, to) {
-            jQuery.publish(('windowUpdated'), {
+            _this.eventEmitter.publish(('windowUpdated'), {
               id: _this.windowId,
               annotationState: to
             });
           },
           ondisplayOn: function(event, from, to) { 
             if (_this.annoEndpointAvailable) {
-                jQuery.publish('HUD_FADE_OUT.' + _this.windowId, ['.mirador-osd-annotations-layer', duration, function() {      
+                _this.eventEmitter.publish('HUD_FADE_OUT.' + _this.windowId, ['.mirador-osd-annotations-layer', duration, function() {      
                   _this.contextControls.show();
                 }]);
             } else {
-              jQuery.publish('HUD_ADD_CLASS.'+_this.windowId, ['.mirador-osd-annotations-layer', 'selected']);
+              _this.eventEmitter.publish('HUD_ADD_CLASS.'+_this.windowId, ['.mirador-osd-annotations-layer', 'selected']);
             }
-            jQuery.publish('modeChange.' + _this.windowId, 'displayAnnotations');
-            jQuery.publish(('windowUpdated'), {
+            _this.eventEmitter.publish('modeChange.' + _this.windowId, 'displayAnnotations');
+            _this.eventEmitter.publish(('windowUpdated'), {
               id: _this.windowId,
               annotationState: to
             });
           },
           onrefreshCreateOff: function(event, from, to) {
-            jQuery.publish('modeChange.' + _this.windowId, 'displayAnnotations');
-            jQuery.publish(('windowUpdated'), {
+            _this.eventEmitter.publish('modeChange.' + _this.windowId, 'displayAnnotations');
+            _this.eventEmitter.publish(('windowUpdated'), {
               id: _this.windowId,
               annotationState: to
             });
           },
           oncreateOn: function(event, from, to) {
             function enableEditingAnnotations() {
-              jQuery.publish('HUD_ADD_CLASS.'+_this.windowId, ['.mirador-osd-edit-mode', 'selected']);
-              jQuery.publish('modeChange.' + _this.windowId, 'editingAnnotations');
+              _this.eventEmitter.publish('HUD_ADD_CLASS.'+_this.windowId, ['.mirador-osd-edit-mode', 'selected']);
+              _this.eventEmitter.publish('modeChange.' + _this.windowId, 'editingAnnotations');
             }
             if (_this.annoEndpointAvailable) {
               if (from === "annoOff") {
-                jQuery.publish('HUD_FADE_OUT.' + _this.windowId, ['.mirador-osd-annotations-layer', duration, function() {      
+                _this.eventEmitter.publish('HUD_FADE_OUT.' + _this.windowId, ['.mirador-osd-annotations-layer', duration, function() {      
                   _this.contextControls.show();
                   enableEditingAnnotations();
                 }]);
@@ -113,37 +115,37 @@
                 enableEditingAnnotations();
               }
             }
-            jQuery.publish(('windowUpdated'), {
+            _this.eventEmitter.publish(('windowUpdated'), {
               id: _this.windowId,
               annotationState: to
             });
           },
           onrefreshCreateOn: function(event, from, to) {
-            jQuery.publish('modeChange.' + _this.windowId, 'editingAnnotations');
-            jQuery.publish(('windowUpdated'), {
+            _this.eventEmitter.publish('modeChange.' + _this.windowId, 'editingAnnotations');
+            _this.eventEmitter.publish(('windowUpdated'), {
               id: _this.windowId,
               annotationState: to
             });
           },
           oncreateOff: function(event, from, to) { 
-            jQuery.publish('HUD_REMOVE_CLASS.'+_this.windowId, ['.mirador-osd-edit-mode', 'selected']);
-            jQuery.publish('modeChange.' + _this.windowId, 'displayAnnotations');
-            jQuery.publish(('windowUpdated'), {
+            _this.eventEmitter.publish('HUD_REMOVE_CLASS.'+_this.windowId, ['.mirador-osd-edit-mode', 'selected']);
+            _this.eventEmitter.publish('modeChange.' + _this.windowId, 'displayAnnotations');
+            _this.eventEmitter.publish(('windowUpdated'), {
               id: _this.windowId,
               annotationState: to
             });
           },
           ondisplayOff: function(event, from, to) { 
             if (_this.annoEndpointAvailable) {
-              jQuery.publish('HUD_REMOVE_CLASS.'+_this.windowId, ['.mirador-osd-edit-mode', 'selected']);
+              _this.eventEmitter.publish('HUD_REMOVE_CLASS.'+_this.windowId, ['.mirador-osd-edit-mode', 'selected']);
               _this.contextControls.hide(function() {
-                jQuery.publish('HUD_FADE_IN.' + _this.windowId, ['.mirador-osd-annotations-layer', duration]);
+                _this.eventEmitter.publish('HUD_FADE_IN.' + _this.windowId, ['.mirador-osd-annotations-layer', duration]);
               });
             } else {
-              jQuery.publish('HUD_REMOVE_CLASS.'+_this.windowId, ['.mirador-osd-annotations-layer', 'selected']);
+              _this.eventEmitter.publish('HUD_REMOVE_CLASS.'+_this.windowId, ['.mirador-osd-annotations-layer', 'selected']);
             }
-            jQuery.publish('modeChange.' + _this.windowId, 'default');
-            jQuery.publish(('windowUpdated'), {
+            _this.eventEmitter.publish('modeChange.' + _this.windowId, 'default');
+            _this.eventEmitter.publish(('windowUpdated'), {
               id: _this.windowId,
               annotationState: to
             });
@@ -156,11 +158,6 @@
                                  '{{#if showNextPrev}}',
                                  '<a class="mirador-osd-previous hud-control">',
                                  '<i class="fa fa-3x fa-chevron-left "></i>',
-                                 '</a>',
-                                 '{{/if}}',
-                                 '{{#if showFullScreen}}',
-                                 '<a class="mirador-osd-fullscreen hud-control" role="button" aria-label="Toggle fullscreen">',
-                                 '<i class="fa fa-expand"></i>',
                                  '</a>',
                                  '{{/if}}',
                                  '{{#if showAnno}}',
