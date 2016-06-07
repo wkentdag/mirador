@@ -1932,14 +1932,5 @@ a.mirador-icon-window-menu, a.mirador-icon-view-type {
     left:0;
     cursor: pointer;
     box-sizing: border-box;
-    // border: 1px solid deepskyblue;
     box-shadow: 0 0 0 1px deepskyblue;
-    // &:hover {
-    //     border: 1px solid white;
-    //     box-shadow: 0 0 12px white;
-    // }
-    // &.selected {
-    //     border: 2px solid deepskyblue;
-    //     box-shadow: 0 0 12px deepskyblue;
-    // }
 }
