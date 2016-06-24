@@ -192,7 +192,7 @@
 
       //attach view and toggle view, which triggers the attachment of panels or overlays
       _this.bindNavigation();
-      _this.toggleManifestLayouts(_this.currentCanvasID, _this.currentFocus);
+      _this.toggleManifestLayouts(_this.canvasID, _this.viewType);
       // switch(focusState) {
       //   case 'ThumbnailsView':
       //     _this.toggleThumbnails(_this.currentCanvasID);
@@ -295,7 +295,7 @@
       });
 
       _this.eventEmitter.subscribe('UPDATE_FOCUS_IMAGES.' + this.id, function(event, images) {
-        _this.updateFocusImages(images.array); 
+        _this.updateFocusImages(images.array);
       });
 
       _this.eventEmitter.subscribe('HIDE_ICON_TOC.' + this.id, function(event) {
@@ -318,13 +318,13 @@
         var visible = !_this.bottomPanelVisible;
         _this.bottomPanelVisibility(visible);
       });
-      
+
       _this.eventEmitter.subscribe('DISABLE_WINDOW_FULLSCREEN', function(event) {
         _this.element.find('.mirador-osd-fullscreen').hide();
       });
 
       _this.eventEmitter.subscribe('ENABLE_WINDOW_FULLSCREEN', function(event) {
-        _this.element.find('.mirador-osd-fullscreen').show();        
+        _this.element.find('.mirador-osd-fullscreen').show();
       });
     },
 
@@ -516,7 +516,7 @@
         this.sidePanel.update('annotations', annotationsTabAvailable);
       }
     },
- 
+
     get: function(prop, parent) {
       if (parent) {
         return this[parent][prop];
@@ -612,7 +612,7 @@
 
     toggleManifestLayouts: function(canvasID, currentFocus) {
       var _this = this;
-      
+
       var manifestLayoutsUpdated = function() {
         var layoutState = _this.ManifestLayouts.getState(),
         perspective = layoutState.perspective,
@@ -628,7 +628,7 @@
         //add in functionality from toggleFocus
       };
 
-      this.currentCanvasID = canvasID;
+      this.canvasID = canvasID;
       var perspective = 'detail';
       if (currentFocus === 'ThumbnailsView') {
         perspective = 'overview';
@@ -639,23 +639,23 @@
           viewingMode = 'paged';
         } else if (currentFocus === 'ScrollView') {
           viewingMode = 'continuous';
-        } 
+        }
       }
       if (this.ManifestLayouts === null) {
         this.ManifestLayouts = new manifestor({
-          manifest: this.manifest.jsonLd,
-          selectedCanvas: canvasID,
-          container: this.element.find('.view-container'),
-          perspective:  perspective, //this will be either ThumbnailsView (overview), ImageView/BookView/ScrollView (detail)
-          viewingMode: viewingMode, //if detail, then ImageView (individuals), BookView (paged), ScrollView (continuous)
-          canvasClass: 'canvas', //default set to 'canvas'
-          frameClass: 'frame', //default set to 'frame'
-          labelClass: 'label', //default set to 'label'
-          viewportPadding: {  // in detail view, make sure this area is clear
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 10 // units in % of pixel height of viewport
+          'manifest': this.manifest.jsonLd,
+          'selectedCanvas': canvasID,
+          'container': this.element.find('.view-container'),
+          'perspective':  perspective, //this will be either ThumbnailsView (overview), ImageView/BookView/ScrollView (detail)
+          'viewingMode': viewingMode, //if detail, then ImageView (individuals), BookView (paged), ScrollView (continuous)
+          'canvasClass': 'canvas', //default set to 'canvas'
+          'frameClass': 'frame', //default set to 'frame'
+          'labelClass': 'label', //default set to 'label'
+          'viewportPadding': {  // in detail view, make sure this area is clear
+            'top': 0,
+            'left': 0,
+            'right': 0,
+            'bottom': 10 // units in % of pixel height of viewport
           },
           stateUpdateCallback: manifestLayoutsUpdated
         });
@@ -663,11 +663,12 @@
           appendTo: this.element.find('.view-container'),
           bottomPanelAvailable: this.bottomPanelAvailable,
           windowId: this.id,
-          annotationLayerAvailable: this.annotationLayerAvailable,
-          annotationCreationAvailable: this.annotationCreationAvailable,
+          annotationLayerAvailable: this.annotationLayer,
+          annotationCreationAvailable: this.annotationCreation,
           annoEndpointAvailable: this.annoEndpointAvailable,
-          fullScreenAvailable : this.fullScreenAvailable,
-          showNextPrev : this.imagesList.length !== 1
+          annotationRefresh: this.annotationRefresh,
+          showNextPrev : this.imagesList.length !== 1,
+          eventEmitter: this.eventEmitter
         });
         manifestLayoutsUpdated();
         console.log(this.ManifestLayouts.getState());
@@ -844,7 +845,7 @@
     updateManifestInfo: function() {
       var _this = this;
       _this.element.find('.mirador-icon-view-type > i:first').removeClass().addClass(_this.iconClasses[_this.viewType]);
-      
+
       if (this.focusOverlaysAvailable[this.viewType].overlay.MetadataView) {
         this.element.find('.mirador-icon-metadata-view').addClass('selected');
       }
