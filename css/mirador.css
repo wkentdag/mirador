@@ -972,62 +972,43 @@ li.highlight {
   height: 95%;
 }
 
-/* panels
+/* Overview 
 ---------------------------------------------------------------------------- */
-
-.panel-thumbnail-view {
+.frame {
   position: absolute;
-  height: 100%;
-  width: 100%;
-  overflow-x: scroll;
-  overflow-y: hidden;
-}
-
-.panel-thumbnail-view ul.panel-listing-thumbs {
-  clear: both;
-  list-style: none;
-  padding: 0;
-  white-space: nowrap;
-  margin-top: 10px;
-  margin-bottom: 4px;
-}
-
-.panel-thumbnail-view ul.panel-listing-thumbs li {
-  box-sizing:border-box;
-  /*float: left;*/
-  /*margin: 0 0 15px 0;*/
-  padding: 0px 10px 0px 10px;
-  /*transition: all 0.03s ease-out;*/
-  display: inline-block;
-}
-
-.panel-thumbnail-view ul.panel-listing-thumbs li img {
-  background-color: gray;
-  min-height: 25px;
-  min-width: 25px;
-  margin: 0 auto;
   display: block;
-  box-sizing:border-box;
+  box-sizing: border-box;
+  /* border: 1px solid white; */
 }
-.panel-thumbnail-view ul.panel-listing-thumbs li img:hover {
-  border:2px solid rgba(0,191,255,0.7);
-  transform: scale(1.1);
-  cursor: pointer;
-}
-
-.panel-thumbnail-view ul.panel-listing-thumbs li .thumb-label {
-  clear: both;
-  color: #999;
-  font-size: 12px;
-  margin: 0 auto;
-  max-width: 75px;
-  text-align: left;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+.frame .label {
+  bottom: 0;
+  font-weight: 100;
+  position: absolute;
   text-align: center;
+  width:100%;
+  margin-bottom:0;
+  height:35px;
+  color: white;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
-
+.canvas {
+  color:white;
+  position: absolute;
+  top:0;
+  left:0;
+  cursor: pointer;
+  box-sizing: border-box;
+  /* background-color: gray; */
+  box-shadow: 0 0 5px gray;
+  border-radius:4px;
+}
+.canvas:hover {
+  /* background-color: lightgray; */
+  box-shadow: 0 0 12px white;
+}
+.canvas img {
+}
 /* openseadragon
 ---------------------------------------------------------------------------- */
 

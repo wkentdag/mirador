@@ -532,6 +532,7 @@
         }//,
         // selectedCanvas: manifest.sequences[0].canvases[50]['@id']
       });
+      _this.viewer.selectViewingMode('individuals');
 //        if (_this.state.getStateProperty('autoHideControls')) {
 //          var timeoutID = null,
 //          fadeDuration = _this.state.getStateProperty('fadeDuration'),
