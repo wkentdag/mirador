@@ -2,6 +2,7 @@
   "name": "Mirador",
   "version": "2.0.0",
   "description": "Multi-window image viewer, a web-based tool to support researcher goals",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/IIIF/mirador"
@@ -44,5 +45,7 @@
     "travis": "./node_modules/grunt-cli/bin/grunt ci --verbose --force",
     "postinstall": "./node_modules/grunt-cli/bin/grunt githooks"
   },
-  "dependencies": {}
+  "dependencies": {
+    "manifestLayouts": "git://github.com/sul-dlss/iiifManifestLayouts"
+  }
 }
