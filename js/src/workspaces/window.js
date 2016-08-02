@@ -204,6 +204,7 @@
         manifest: this.manifest,
         appendTo: this.element.find('.view-container'),
         windowId: this.id,
+        viewType: this.viewType,
         state:  this.state,
         eventEmitter: this.eventEmitter,
         canvasID: this.canvasID,

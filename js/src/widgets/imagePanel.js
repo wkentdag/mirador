@@ -517,10 +517,24 @@
         .attr('id', osdID)
         .appendTo(_this.element);
 
+      var perspective = 'detail';
+      if (_this.viewType === 'ThumbnailsView') {
+        perspective = 'overview';
+      }
+      var viewingMode = 'individuals';
+      if (perspective === 'detail') {
+        if (_this.viewType === 'BookView') {
+          viewingMode = 'paged';
+        } else if (_this.viewType === 'ScrollView') {
+          viewingMode = 'continuous';
+        }
+      }
+
       _this.viewer = manifestor({
         manifest: this.manifest.jsonLd,
         container: osdElement,
-        perspective:  'overview',
+        perspective:  perspective,
+        viewingMode: viewingMode,
         canvasClass: 'canvas', //default set to 'canvas'
         frameClass: 'frame', //default set to 'frame'
         labelClass: 'label', //default set to 'label'
@@ -532,7 +546,9 @@
         }//,
         // selectedCanvas: manifest.sequences[0].canvases[50]['@id']
       });
-      _this.viewer.selectViewingMode('individuals');
+
+      _this.viewer.selectViewingMode('paged');
+      _this.osd = _this.viewer.osd;
 //        if (_this.state.getStateProperty('autoHideControls')) {
 //          var timeoutID = null,
 //          fadeDuration = _this.state.getStateProperty('fadeDuration'),
