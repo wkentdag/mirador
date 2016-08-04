@@ -62,8 +62,7 @@
   $.Window.prototype = {
     init: function () {
       var _this = this,
-          manifest = _this.manifest.jsonLd,
-          templateData = {};
+          manifest = _this.manifest.jsonLd;
 
       //make sure annotations list is cleared out when changing objects within window
       while(_this.annotationsList.length > 0) {
@@ -81,18 +80,20 @@
         return value;
       });
 
+      //get the master list of images and set current canvas ID if we don't have one
       _this.imagesList = _this.manifest.getCanvases();
       if (!_this.canvasID) {
         _this.canvasID = _this.imagesList[0]['@id'];
       }
 
+      // check if we have an annotation endpoint and if the annotation layer is available
       this.annoEndpointAvailable = !jQuery.isEmptyObject(_this.state.getStateProperty('annotationEndpoint'));
       if (!this.canvasControls.annotations.annotationLayer) {
         this.canvasControls.annotations.annotationCreation = false;
         this.annoEndpointAvailable = false;
         this.canvasControls.annotations.annotationState = 'annoOff';
       }
-      _this.getAnnotations();
+      _this.getAnnotations(); // we only need to call this if we need to display annotations in the app. be smarter here
 
       // if manipulationLayer is true,  but all individual options are set to false, set manipulationLayer to false
       if (this.canvasControls.imageManipulation.manipulationLayer) {
@@ -114,79 +115,8 @@
         });
       }
 
-      templateData.sidePanel = this.sidePanelAvailable;
-      if (this.sidePanelAvailable) {
-        templateData.sidePanel = !Object.keys(this.sidePanelOptions).every(function(element, index, array) {
-          return _this.sidePanelOptions[element] === false;
-        });
-      }
-      if (typeof this.overlayAvailable !== 'undefined' && !this.overlayAvailable) {
-        jQuery.each(this.panelsAvailableForMode, function(key, value) {
-          _this.panelsAvailableForMode[key].overlay = {'' : false};
-        });
-      } else {
-        templateData.MetadataView = true;
-      }
-
-      //determine if any buttons should be hidden in template
-      templateData.iconClasses = {};
-      jQuery.each(this.modes, function(index, value) {
-        templateData[value] = true;
-        templateData.iconClasses[value] = _this.iconClasses[value];
-      });
-      templateData.title = $.JsonLd.getTextValue(manifest.label);
-      templateData.displayLayout = this.displayLayout;
-      templateData.layoutOptions = this.layoutOptions;
-
-      // if displayLayout is true,  but all individual options are set to false, set displayLayout to false
-      if (this.displayLayout) {
-        templateData.displayLayout = !Object.keys(this.layoutOptions).every(function(element, index, array) {
-          return _this.layoutOptions[element] === false;
-        });
-      }
-      templateData.currentModeClass = _this.iconClasses[_this.viewType];
-      templateData.showFullScreen = _this.fullScreen;
-      _this.element = jQuery(this.template(templateData)).appendTo(_this.appendTo);
-      this.element.find('.manifest-info .mirador-tooltip').each(function() {
-        jQuery(this).qtip({
-          content: {
-            text: jQuery(this).attr('title')
-          },
-          position: {
-            my: 'top center',
-            at: 'bottom center',
-            adjust: {
-              method: 'shift',
-              y: -11
-            },
-            container: _this.element,
-            viewport: true
-          },
-          style: {
-            classes: 'qtip-dark qtip-shadow qtip-rounded'
-          }
-        });
-      });
-      //TODO: this needs to switch the postion when it is a right to left manifest
-      this.element.find('.manifest-info .window-manifest-title').qtip({
-        content: {
-          text: jQuery(this).attr('title')
-        },
-        position: {
-          my: 'top center',
-          at: 'bottom left',
-          adjust: {
-            method: 'shift',
-            x: 20,
-            y: 1
-          },
-          container: _this.element,
-          viewport: true
-        },
-        style: {
-          classes: 'qtip-dark qtip-shadow qtip-rounded'
-        }
-      });
+      _this.setTemplateData();
+      _this.setTooltipContent();
       _this.eventEmitter.publish('WINDOW_ELEMENT_UPDATED', {windowId: _this.id, element: _this.element});
 
       //clear any existing objects
@@ -780,6 +710,89 @@
 
       this.element.find('.add-slot-above').on('click', function() {
         _this.eventEmitter.publish('SPLIT_UP_FROM_WINDOW', _this.id);
+      });
+    },
+
+    setTemplateData: function() {
+      var templateData = {},
+      _this = this;
+
+      templateData.sidePanel = this.sidePanelAvailable;
+      if (this.sidePanelAvailable) {
+        templateData.sidePanel = !Object.keys(this.sidePanelOptions).every(function(element, index, array) {
+          return _this.sidePanelOptions[element] === false;
+        });
+      }
+      if (typeof this.overlayAvailable !== 'undefined' && !this.overlayAvailable) {
+        jQuery.each(this.panelsAvailableForMode, function(key, value) {
+          _this.panelsAvailableForMode[key].overlay = {'' : false};
+        });
+      } else {
+        templateData.MetadataView = true;
+      }
+
+      //determine if any buttons should be hidden in template
+      templateData.iconClasses = {};
+      jQuery.each(this.modes, function(index, value) {
+        templateData[value] = true;
+        templateData.iconClasses[value] = _this.iconClasses[value];
+      });
+      templateData.title = $.JsonLd.getTextValue(this.manifest.jsonLd.label);
+      templateData.displayLayout = this.displayLayout;
+      templateData.layoutOptions = this.layoutOptions;
+
+      // if displayLayout is true,  but all individual options are set to false, set displayLayout to false
+      if (this.displayLayout) {
+        templateData.displayLayout = !Object.keys(this.layoutOptions).every(function(element, index, array) {
+          return _this.layoutOptions[element] === false;
+        });
+      }
+      templateData.currentModeClass = _this.iconClasses[_this.viewType];
+      templateData.showFullScreen = _this.fullScreen;
+      _this.element = jQuery(this.template(templateData)).appendTo(_this.appendTo);
+    },
+
+    setTooltipContent: function() {
+      var _this = this;
+      this.element.find('.manifest-info .mirador-tooltip').each(function() {
+        jQuery(this).qtip({
+          content: {
+            text: jQuery(this).attr('title')
+          },
+          position: {
+            my: 'top center',
+            at: 'bottom center',
+            adjust: {
+              method: 'shift',
+              y: -11
+            },
+            container: _this.element,
+            viewport: true
+          },
+          style: {
+            classes: 'qtip-dark qtip-shadow qtip-rounded'
+          }
+        });
+      });
+      //TODO: this needs to switch the postion when it is a right to left manifest
+      this.element.find('.manifest-info .window-manifest-title').qtip({
+        content: {
+          text: jQuery(this).attr('title')
+        },
+        position: {
+          my: 'top center',
+          at: 'bottom left',
+          adjust: {
+            method: 'shift',
+            x: 20,
+            y: 1
+          },
+          container: _this.element,
+          viewport: true
+        },
+        style: {
+          classes: 'qtip-dark qtip-shadow qtip-rounded'
+        }
       });
     },
 
