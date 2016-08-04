@@ -191,7 +191,7 @@
       _this.eventEmitter.publish('WINDOW_ELEMENT_UPDATED', {windowId: _this.id, element: _this.element});
 
       //clear any existing objects
-      _this.clearViews();
+      _this.imagePanel = null;
       _this.clearPanelsAndOverlay();
 
       //window needs to listen for any events before it finishes building out the widgets, in case they publish anything
@@ -340,14 +340,15 @@
 
       //this event should trigger from layout
       jQuery(window).resize($.debounce(function(){
-        if (_this.focusModules.ScrollView) {
-          var containerHeight = _this.element.find('.view-container').height();
-          var triggerShow = false;
-          if (_this.viewType === "ScrollView") {
-            triggerShow = true;
-          }
-          _this.focusModules.ScrollView.reloadImages(Math.floor(containerHeight * _this.scrollImageRatio), triggerShow);
-        }
+        //TODO check if this needs to be implemented
+        // if (_this.focusModules.ScrollView) {
+        //   var containerHeight = _this.element.find('.view-container').height();
+        //   var triggerShow = false;
+        //   if (_this.viewType === "ScrollView") {
+        //     triggerShow = true;
+        //   }
+        //   _this.focusModules.ScrollView.reloadImages(Math.floor(containerHeight * _this.scrollImageRatio), triggerShow);
+        // }
       }, 300));
 
       this.element.find('.mirador-osd-fullscreen').on('click', function() {
@@ -419,13 +420,6 @@
           _this.annotationsList.pop();
         }
         _this.getAnnotations();
-      });
-    },
-
-    clearViews: function() {
-      var _this = this;
-      jQuery.each(_this.focusModules, function(key, value) {
-        _this.focusModules[key] = null;
       });
     },
 
@@ -561,12 +555,6 @@
       if (imageMode && jQuery.inArray(imageMode, this.imageModes) > -1) {
         this.currentImageMode = imageMode;
       }
-      //set other focusStates to false (toggle to display none)
-      jQuery.each(this.focusModules, function(focusKey, module) {
-        if (module && focusState !== focusKey) {
-          module.toggle(false);
-        }
-      });
       this.updateManifestInfo();
       // this.updatePanelsAndOverlay(focusState);
       this.updateSidePanel();
@@ -621,29 +609,29 @@
       //console.log(this.focusImages);
       //if (this.bottomPanel) { this.bottomPanel.updateFocusImages(this.focusImages); }
     },
-    toggleImageView: function(canvasID) {
-      this.canvasID = canvasID;
-      if (this.focusModules.ImageView === null) {
-        this.focusModules.ImageView = new $.ImageView({
-          manifest: this.manifest,
-          appendTo: this.element.find('.view-container'),
-          windowId: this.id,
-          state:  this.state,
-          eventEmitter: this.eventEmitter,
-          canvasID: canvasID,
-          imagesList: this.imagesList,
-          osdOptions: this.windowOptions,
-          bottomPanelAvailable: this.bottomPanelAvailable,
-          annoEndpointAvailable: this.annoEndpointAvailable,
-          canvasControls: this.canvasControls,
-          annotationState : this.canvasControls.annotations.annotationState
-        });
-      } else {
-        var view = this.focusModules.ImageView;
-        view.updateImage(canvasID);
-      }
-      this.toggleFocus('ImageView', 'ImageView');
-    },
+    // toggleImageView: function(canvasID) {
+    //   this.canvasID = canvasID;
+    //   if (this.focusModules.ImageView === null) {
+    //     this.focusModules.ImageView = new $.ImageView({
+    //       manifest: this.manifest,
+    //       appendTo: this.element.find('.view-container'),
+    //       windowId: this.id,
+    //       state:  this.state,
+    //       eventEmitter: this.eventEmitter,
+    //       canvasID: canvasID,
+    //       imagesList: this.imagesList,
+    //       osdOptions: this.windowOptions,
+    //       bottomPanelAvailable: this.bottomPanelAvailable,
+    //       annoEndpointAvailable: this.annoEndpointAvailable,
+    //       canvasControls: this.canvasControls,
+    //       annotationState : this.canvasControls.annotations.annotationState
+    //     });
+    //   } else {
+    //     var view = this.focusModules.ImageView;
+    //     view.updateImage(canvasID);
+    //   }
+    //   this.toggleFocus('ImageView', 'ImageView');
+    // },
 
     updateFocusImages: function(imageList) {
       this.focusImages = imageList;
