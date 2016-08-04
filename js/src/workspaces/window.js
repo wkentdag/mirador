@@ -621,34 +621,6 @@
       //console.log(this.focusImages);
       //if (this.bottomPanel) { this.bottomPanel.updateFocusImages(this.focusImages); }
     },
-    toggleImageView: function(canvasID) {
-      this.canvasID = canvasID;
-      if (this.focusModules.ImageView === null) {
-        this.focusModules.ImageView = new $.ImageView({
-          manifest: this.manifest,
-          appendTo: this.element.find('.view-container'),
-          windowId: this.id,
-          state:  this.state,
-          eventEmitter: this.eventEmitter,
-          canvasID: canvasID,
-          imagesList: this.imagesList,
-          osdOptions: this.windowOptions,
-          bottomPanelAvailable: this.bottomPanelAvailable,
-          annoEndpointAvailable: this.annoEndpointAvailable,
-          canvasControls: this.canvasControls,
-          annotationState : this.canvasControls.annotations.annotationState
-        });
-      } else {
-        var view = this.focusModules.ImageView;
-        view.updateImage(canvasID);
-      }
-      this.toggleFocus('ImageView', 'ImageView');
-    },
-
-    updateFocusImages: function(imageList) {
-      this.focusImages = imageList;
-      if (this.bottomPanel) { this.bottomPanel.updateFocusImages(this.focusImages); }
-    },
 
     setCurrentCanvasID: function(canvasID) {
       var _this = this;
@@ -659,16 +631,6 @@
         _this.annotationsList.pop();
       }
       this.getAnnotations();
-      switch(this.currentImageMode) {
-      case 'ImageView':
-        this.toggleImageView(this.canvasID);
-        break;
-      case 'BookView':
-        this.toggleBookView(this.canvasID);
-        break;
-      default:
-        break;
-      }
       _this.eventEmitter.publish(('currentCanvasIDUpdated.' + _this.id), canvasID);
     },
 
