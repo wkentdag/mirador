@@ -15,9 +15,9 @@
       currentImageMode:  'ImageView',
       imageModes:        ['ImageView', 'BookView'],
       originalImageModes:['ImageView', 'BookView'],
-      focuses:           ['ThumbnailsView', 'ImageView', 'ScrollView', 'BookView'],
-      focusModules:           {'ImagePanel': null},
-      focusOverlaysAvailable: {
+      modes:             ['ThumbnailsView', 'ImageView', 'ScrollView', 'BookView'],
+      imagePanel:        null,
+      panelsAvailableForMode: {
         'ThumbnailsView': {
           'overlay' : {'MetadataView' : false},
           'bottomPanel' : {'' : false}
@@ -63,7 +63,6 @@
     init: function () {
       var _this = this,
           manifest = _this.manifest.jsonLd,
-          focusState = _this.viewType,
           templateData = {};
 
       //make sure annotations list is cleared out when changing objects within window
@@ -75,10 +74,10 @@
 
       _this.removeBookView();
 
-      //reset imagemodes and then remove any imageModes that are not available as a focus
+      //reset imagemodes and then remove any imageModes that are not available as a mode
       this.imageModes = this.originalImageModes;
       this.imageModes = jQuery.map(this.imageModes, function(value, index) {
-        if (jQuery.inArray(value, _this.focuses) === -1) return null;
+        if (jQuery.inArray(value, _this.modes) === -1) return null;
         return value;
       });
 
@@ -110,8 +109,8 @@
 
       //check config
       if (typeof this.bottomPanelAvailable !== 'undefined' && !this.bottomPanelAvailable) {
-        jQuery.each(this.focusOverlaysAvailable, function(key, value) {
-          _this.focusOverlaysAvailable[key].bottomPanel = {'' : false};
+        jQuery.each(this.panelsAvailableForMode, function(key, value) {
+          _this.panelsAvailableForMode[key].bottomPanel = {'' : false};
         });
       }
 
@@ -122,8 +121,8 @@
         });
       }
       if (typeof this.overlayAvailable !== 'undefined' && !this.overlayAvailable) {
-        jQuery.each(this.focusOverlaysAvailable, function(key, value) {
-          _this.focusOverlaysAvailable[key].overlay = {'' : false};
+        jQuery.each(this.panelsAvailableForMode, function(key, value) {
+          _this.panelsAvailableForMode[key].overlay = {'' : false};
         });
       } else {
         templateData.MetadataView = true;
@@ -131,7 +130,7 @@
 
       //determine if any buttons should be hidden in template
       templateData.iconClasses = {};
-      jQuery.each(this.focuses, function(index, value) {
+      jQuery.each(this.modes, function(index, value) {
         templateData[value] = true;
         templateData.iconClasses[value] = _this.iconClasses[value];
       });
@@ -145,7 +144,7 @@
           return _this.layoutOptions[element] === false;
         });
       }
-      templateData.currentFocusClass = _this.iconClasses[_this.viewType];
+      templateData.currentModeClass = _this.iconClasses[_this.viewType];
       templateData.showFullScreen = _this.fullScreen;
       _this.element = jQuery(this.template(templateData)).appendTo(_this.appendTo);
       this.element.find('.manifest-info .mirador-tooltip').each(function() {
@@ -216,7 +215,7 @@
         annotationState : this.canvasControls.annotations.annotationState
       });
 
-      this.toggleFocus('ImageView', 'ImageView');
+      this.toggleMode(this.viewType, this.viewType);
       if (_this.state.getSlots().length <= 1) {
         _this.element.find('.remove-object-option').hide();
       }
@@ -243,12 +242,12 @@
     // reset whether BookView is available every time as a user might switch between paged and non-paged objects within a single slot/window
     removeBookView: function() {
       var _this = this;
-      this.focuses = this.availableViews;
+      this.modes = this.availableViews;
       var manifest = this.manifest.jsonLd;
       if (manifest.sequences[0].viewingHint) {
         if (manifest.sequences[0].viewingHint.toLowerCase() !== 'paged') {
           //disable bookview for this object because it's not a paged object
-          this.focuses = jQuery.grep(this.focuses, function(value) {
+          this.modes = jQuery.grep(this.modes, function(value) {
             return value !== 'BookView';
           });
         }
@@ -479,8 +478,8 @@
 
     /*setTOCBoolean: function(boolValue) {
      var _this = this;
-     jQuery.each(this.focusOverlaysAvailable, function(key, value) {
-     _this.focusOverlaysAvailable[key].sidePanel.TableOfContents = boolValue;
+     jQuery.each(this.panelsAvailableForMode, function(key, value) {
+     _this.panelsAvailableForMode[key].sidePanel.TableOfContents = boolValue;
      });
      //remove thumbnail icon if not available for this object
      if (!boolValue) {
@@ -488,9 +487,9 @@
      }
      },*/
 
-    togglePanels: function(panelType, panelState, viewType, focusState) {
-      //update state in focusOverlaysAvailable
-      this.focusOverlaysAvailable[focusState][panelType][viewType] = panelState;
+    togglePanels: function(panelType, panelState, viewType, currentMode) {
+      //update state in panelsAvailableForMode
+      this.panelsAvailableForMode[currentMode][panelType][viewType] = panelState;
       this[panelType].toggle(panelState);
     },
 
@@ -530,35 +529,35 @@
       });
     },
 
-    toggleMetadataOverlay: function(focusState) {
+    toggleMetadataOverlay: function(currentMode) {
       var _this = this;
-      var currentState = this.focusOverlaysAvailable[focusState].overlay.MetadataView;
+      var currentState = this.panelsAvailableForMode[currentMode].overlay.MetadataView;
       if (currentState) {
         this.element.find('.mirador-icon-metadata-view').removeClass('selected');
       } else {
         this.element.find('.mirador-icon-metadata-view').addClass('selected');
       }
-      //set overlay for all focus types to same value
-      jQuery.each(this.focusOverlaysAvailable, function(focusType, options) {
-        if (focusState !== focusType) {
+      //set overlay for all mode types to same value
+      jQuery.each(this.panelsAvailableForMode, function(mode, options) {
+        if (currentMode !== mode) {
           this.overlay.MetadataView = !currentState;
         }
       });
-      //and then do toggling for current focus
-      this.togglePanels('overlay', !currentState, 'MetadataView', focusState);
+      //and then do toggling for current mode
+      this.togglePanels('overlay', !currentState, 'MetadataView', currentMode);
     },
 
-    toggleFocus: function(focusState, imageMode) {
+    toggleMode: function(currentMode, imageMode) {
       var _this = this;
 
-      this.viewType = focusState;
+      this.viewType = currentMode;
       if (imageMode && jQuery.inArray(imageMode, this.imageModes) > -1) {
         this.currentImageMode = imageMode;
       }
       this.updateManifestInfo();
-      // this.updatePanelsAndOverlay(focusState);
+      this.updatePanelsAndOverlay(this.viewType);
       this.updateSidePanel();
-      _this.eventEmitter.publish("focusUpdated");
+      _this.eventEmitter.publish("focusUpdated"); //would like to rename!
       _this.eventEmitter.publish("windowUpdated", {
         id: _this.id,
         viewType: _this.viewType,
@@ -572,7 +571,7 @@
     updatePanelsAndOverlay: function(state) {
       var _this = this;
 
-      jQuery.each(this.focusOverlaysAvailable[state], function(panelType, viewOptions) {
+      jQuery.each(this.panelsAvailableForMode[state], function(panelType, viewOptions) {
         jQuery.each(viewOptions, function(view, displayed) {
           //instantiate any panels that exist for this view but are still null
           if (view !== '' && _this[panelType] === null) {
@@ -590,7 +589,7 @@
           }
 
           //refresh displayed in case TableOfContents module changed it
-          displayed = _this.focusOverlaysAvailable[state][panelType][view];
+          displayed = _this.panelsAvailableForMode[state][panelType][view];
 
           //toggle any valid panels
           if (view !== '' && displayed) {
@@ -640,7 +639,7 @@
       var _this = this;
       _this.element.find('.mirador-icon-view-type > i:first').removeClass().addClass(_this.iconClasses[_this.viewType]);
 
-      if (this.focusOverlaysAvailable[this.viewType].overlay.MetadataView) {
+      if (this.panelsAvailableForMode[this.viewType].overlay.MetadataView) {
         this.element.find('.mirador-icon-metadata-view').addClass('selected');
       }
     },
@@ -715,7 +714,7 @@
       }
     },
 
-    // based on currentFocus
+    // based on current mode
     bindNavigation: function() {
       var _this = this;
 
@@ -790,7 +789,7 @@
       '<div class="manifest-info">',
       '<div class="window-manifest-navigation">',
       '<a href="javascript:;" class="mirador-btn mirador-icon-view-type" role="button" title="{{t "viewTypeTooltip"}}" aria-label="{{t "viewTypeTooltip"}}">',
-      '<i class="{{currentFocusClass}}"></i>',
+      '<i class="{{currentModeClass}}"></i>',
       '<i class="fa fa-caret-down"></i>',
       '<ul class="dropdown image-list">',
       '{{#if ImageView}}',
