@@ -141,6 +141,7 @@
           _this.element.find('.mirador-osd-previous').show();
         }
         // If it is the last canvas, hide the "go to previous" button, otherwise show it.
+        _this.updateModeAndCanvas('', canvasId);
       });
 
       _this.eventEmitter.subscribe('CHANGE_MODE_AND_CANVAS.' + _this.windowId, function(event, newMode, newCanvasId) {
@@ -652,7 +653,9 @@
 
     updateModeAndCanvas: function(newMode, canvasID) {
       var _this = this;
-      this.viewType = newMode;
+      if (newMode !== '') {
+        this.viewType = newMode;
+      }
       this.setPerspectiveAndViewingMode();
       if (this.canvasID !== canvasID) {
         this.canvasID = canvasID;
@@ -664,6 +667,7 @@
 
       this.viewer.selectViewingMode(this.viewingMode);
       this.viewer.selectPerspective(this.perspective);
+      this.viewer.selectCanvas(canvasID);
     },
 
     next: function() {
