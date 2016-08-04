@@ -665,9 +665,9 @@
         _this.eventEmitter.publish('UPDATE_FOCUS_IMAGES.' + this.windowId, {array: [canvasID]});
       }
 
+      this.viewer.selectCanvas(canvasID);
       this.viewer.selectViewingMode(this.viewingMode);
       this.viewer.selectPerspective(this.perspective);
-      this.viewer.selectCanvas(canvasID);
     },
 
     next: function() {
