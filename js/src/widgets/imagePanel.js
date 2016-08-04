@@ -543,11 +543,11 @@
           left: 10,
           right: 10,
           bottom: 20 // units in % of pixel height of viewport
-        }//,
-        // selectedCanvas: manifest.sequences[0].canvases[50]['@id']
+        },
+        selectedCanvas: this.canvasID
       });
 
-      _this.viewer.selectViewingMode('paged');
+      _this.viewer.selectViewingMode(viewingMode);
       _this.osd = _this.viewer.osd;
 //        if (_this.state.getStateProperty('autoHideControls')) {
 //          var timeoutID = null,
@@ -661,6 +661,7 @@
       var _this = this;
       var next = this.currentImgIndex + 1;
 
+      _this.viewer.next();
       if (next < this.imagesList.length) {
         _this.eventEmitter.publish('SET_CURRENT_CANVAS_ID.' + this.windowId, this.imagesList[next]['@id']);
       }
@@ -670,6 +671,7 @@
       var _this = this;
       var prev = this.currentImgIndex - 1;
 
+      _this.viewer.previous();
       if (prev >= 0) {
         _this.eventEmitter.publish('SET_CURRENT_CANVAS_ID.' + this.windowId, this.imagesList[prev]['@id']);
       }
