@@ -665,19 +665,19 @@
                                                               });
 
       this.element.find('.single-image-option').on('click', function() {
-        _this.toggleImageView(_this.canvasID);
+        _this.eventEmitter.publish('CHANGE_MODE_AND_CANVAS.' + _this.id, ['ImageView', _this.canvasID]);
       });
 
       this.element.find('.book-option').on('click', function() {
-        _this.toggleBookView(_this.canvasID);
+        _this.eventEmitter.publish('CHANGE_MODE_AND_CANVAS.' + _this.id, ['BookView', _this.canvasID]);
       });
 
       this.element.find('.scroll-option').on('click', function() {
-        _this.toggleScrollView(_this.canvasID);
+        _this.eventEmitter.publish('CHANGE_MODE_AND_CANVAS.' + _this.id, ['ScrollView', _this.canvasID]);
       });
 
       this.element.find('.thumbnails-option').on('click', function() {
-        _this.toggleThumbnails(_this.canvasID);
+        _this.eventEmitter.publish('CHANGE_MODE_AND_CANVAS.' + _this.id, ['ThumbnailsView', _this.canvasID]);
       });
 
       this.element.find('.mirador-icon-metadata-view').on('click', function() {

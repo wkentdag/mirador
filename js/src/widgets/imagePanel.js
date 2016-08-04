@@ -3,7 +3,6 @@
   $.ImagePanel = function(options) {
 
     jQuery.extend(this, {
-      currentImg:       null,
       windowId:         null,
       currentImgIndex:  0,
       canvasID:          null,
@@ -43,12 +42,12 @@
           zoomLevel:        null
         };
       }
-      this.currentImg = this.imagesList[this.currentImgIndex];
       this.element = jQuery(this.template()).appendTo(this.appendTo);
       this.elemAnno = jQuery('<div/>')
       .addClass(this.annoCls)
       .appendTo(this.element);
 
+      this.setPerspectiveAndViewingMode();
       this.layoutManifest();
       _this.eventEmitter.publish('UPDATE_FOCUS_IMAGES.' + this.windowId, {array: [this.canvasID]});
 
@@ -84,6 +83,21 @@
         _this.eventEmitter.publish('SET_BOTTOM_PANEL_VISIBILITY.' + this.windowId, false);
       } else {
         _this.eventEmitter.publish('SET_BOTTOM_PANEL_VISIBILITY.' + this.windowId, null);
+      }
+    },
+
+    setPerspectiveAndViewingMode: function() {
+      this.perspective = 'detail';
+      if (this.viewType === 'ThumbnailsView') {
+        this.perspective = 'overview';
+      }
+      this.viewingMode = 'individuals';
+      if (this.perspective === 'detail') {
+        if (this.viewType === 'BookView') {
+          this.viewingMode = 'paged';
+        } else if (this.viewType === 'ScrollView') {
+          this.viewingMode = 'continuous';
+        }
       }
     },
 
@@ -127,6 +141,10 @@
           _this.element.find('.mirador-osd-previous').show();
         }
         // If it is the last canvas, hide the "go to previous" button, otherwise show it.
+      });
+
+      _this.eventEmitter.subscribe('CHANGE_MODE_AND_CANVAS.' + _this.windowId, function(event, newMode, newCanvasId) {
+        _this.updateModeAndCanvas(newMode, newCanvasId);
       });
 
       //Related to Annotations HUD
@@ -517,24 +535,11 @@
         .attr('id', osdID)
         .appendTo(_this.element);
 
-      var perspective = 'detail';
-      if (_this.viewType === 'ThumbnailsView') {
-        perspective = 'overview';
-      }
-      var viewingMode = 'individuals';
-      if (perspective === 'detail') {
-        if (_this.viewType === 'BookView') {
-          viewingMode = 'paged';
-        } else if (_this.viewType === 'ScrollView') {
-          viewingMode = 'continuous';
-        }
-      }
-
       _this.viewer = manifestor({
         manifest: this.manifest.jsonLd,
         container: osdElement,
-        perspective:  perspective,
-        viewingMode: viewingMode,
+        perspective:  this.perspective,
+        viewingMode: this.viewingMode,
         canvasClass: 'canvas', //default set to 'canvas'
         frameClass: 'frame', //default set to 'frame'
         labelClass: 'label', //default set to 'label'
@@ -547,7 +552,7 @@
         selectedCanvas: this.canvasID
       });
 
-      _this.viewer.selectViewingMode(viewingMode);
+      _this.viewer.selectViewingMode(this.viewingMode);
       _this.osd = _this.viewer.osd;
 //        if (_this.state.getStateProperty('autoHideControls')) {
 //          var timeoutID = null,
@@ -645,16 +650,20 @@
       });
     },
 
-    updateImage: function(canvasID) {
+    updateModeAndCanvas: function(newMode, canvasID) {
       var _this = this;
+      this.viewType = newMode;
+      this.setPerspectiveAndViewingMode();
       if (this.canvasID !== canvasID) {
         this.canvasID = canvasID;
         this.currentImgIndex = $.getImageIndexById(this.imagesList, canvasID);
-        this.currentImg = this.imagesList[this.currentImgIndex];
         _this.eventEmitter.publish('UPDATE_FOCUS_IMAGES.' + this.windowId, {array: [canvasID]});
       } else {
         _this.eventEmitter.publish('UPDATE_FOCUS_IMAGES.' + this.windowId, {array: [canvasID]});
       }
+
+      this.viewer.selectViewingMode(this.viewingMode);
+      this.viewer.selectPerspective(this.perspective);
     },
 
     next: function() {
