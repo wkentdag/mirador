@@ -8,7 +8,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-git-describe');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-coveralls');
@@ -230,14 +229,6 @@ module.exports = function(grunt) {
 
     },
 
-    'git-describe': {
-      build: {
-        options: {
-          prop: 'gitInfo'
-        }
-      }
-    },
-
     githooks: {
       all: {
         'pre-commit': 'jshint cover'
@@ -362,12 +353,12 @@ module.exports = function(grunt) {
   // ----------
   // Build task.
   // Cleans out the build folder and builds the code and images into it, checking lint.
-  grunt.registerTask('build', [ 'clean:build', 'git-describe', 'jshint', 'concat', 'cssmin', 'copy' ]);
+  grunt.registerTask('build', [ 'clean:build', 'jshint', 'concat', 'cssmin', 'copy' ]);
 
   // ----------
   // Dev Build task.
   // Build, but skip the time-consuming and obscurantist minification and uglification.
-  grunt.registerTask('dev_build', [ 'clean:build', 'git-describe', 'jshint', 'concat', 'copy' ]);
+  grunt.registerTask('dev_build', [ 'clean:build', 'jshint', 'concat', 'copy' ]);
 
   // ----------
   // Package task.
