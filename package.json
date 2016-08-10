@@ -41,7 +41,7 @@
   "scripts": {
     "start": "bower install && grunt",
     "test": "./node_modules/grunt-cli/bin/grunt cover jshint coveralls --verbose --full",
-    "postinstall": "npm start",
+    "postinstall": "bower install && grunt",
     "travis": "./node_modules/grunt-cli/bin/grunt ci --verbose --force"
   },
   "dependencies": {}
